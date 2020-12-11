@@ -1,0 +1,28 @@
+{
+  "name": "4thDec2020",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "watch": {"test": "index.js"},
+  "scripts": {
+    "test": "npm run start-webpack",
+    "watch": "npm-watch",
+    "tailwind": "tailwindcss build dist/index.css -o public/index.css",
+    "start-webpack": "webpack --config webpack.config.js"
+
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "autoprefixer": "^10.0.4",
+    "npm-watch": "^0.7.0",
+    "postcss": "^8.1.14",
+    "tailwindcss": "^2.0.1",
+    "three": "^0.123.0",
+    "webpack": "^5.9.0"
+  },
+  "devDependencies": {
+    "webpack-cli": "^4.2.0"
+  }
+}
