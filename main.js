@@ -331,6 +331,14 @@ return{
     },
     created(){
         this.container=document.querySelector('#app');
+        const webgl_container=document.createElement('div');
+        webgl_container.classList.add('absolute')
+        webgl_container.classList.add('w-full');
+        webgl_container.classList.add('h-full');
+        webgl_container.classList.add('top-0');
+        webgl_container.classList.add('left-0');
+        webgl_container.classList.add('z-20');
+        this.container.appendChild(webgl_container);
         console.log('mounted');
         /*THREE js : 1st Step: createScene */
         scene=new THREE.Scene();
@@ -377,8 +385,8 @@ return{
         //3d Step:createRenderer;
         this.renderer=new THREE.WebGL1Renderer({antialias:true});
         this.renderer.setClearColor('#c1c8c1');
-        this.renderer.setSize(this.container.getBoundingClientRect().width,this.container.getBoundingClientRect().height);
-        this.container.appendChild(this.renderer.domElement);
+        this.renderer.setSize(webgl_container.getBoundingClientRect().width,webgl_container.getBoundingClientRect().height);
+        webgl_container.appendChild(this.renderer.domElement);
 
         //4thStep:createLight;
         const ambient_light=new THREE.AmbientLight(0x404040);
@@ -452,7 +460,7 @@ return{
 
         CssScene.add(css_obj)
         console.log(CssScene.children)
-      console.log('created')
+        console.log('created')
     },
     mounted(){
         let me= this;
