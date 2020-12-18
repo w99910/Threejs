@@ -3,13 +3,14 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "watch": {"test": "index.js"},
+  "watch": {
+    "test": "index.js"
+  },
   "scripts": {
     "test": "npm run start-webpack",
     "watch": "npm-watch",
     "tailwind": "tailwindcss build dist/index.css -o public/index.css",
     "start-webpack": "webpack --config webpack.config.js"
-
   },
   "keywords": [],
   "author": "",
@@ -20,6 +21,7 @@
     "postcss": "^8.1.14",
     "tailwindcss": "^2.0.1",
     "three": "^0.123.0",
+    "vue": "^3.0.4",
     "webpack": "^5.9.0"
   },
   "devDependencies": {

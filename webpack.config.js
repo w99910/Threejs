@@ -1,5 +1,5 @@
 module.exports={
-    entry:'/index.js',
+    entry:'/public/Controller.js',
 output:{
     filename: "main.js",
     path:__dirname+'/dist/',
