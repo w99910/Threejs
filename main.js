@@ -1,15 +1,17 @@
-import * as THREE from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r123/three.module.min.js';
+// import * as THREE from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r123/three.module.min.js';
 // import * as THREE from 'three';
 // const THREE=require('three');
-import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@latest/examples/jsm/loaders/GLTFLoader.js";
+import { GLTFLoader } from "./node_modules/three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from "https://cdn.jsdelivr.net/npm/three@latest/examples/jsm/controls/OrbitControls.js";
 import ThirdPersonCamera from "./public/ThirdPersonCamera.js";
 import {CSS3DObject} from "https://cdn.jsdelivr.net/npm/three@latest/examples/jsm/renderers/CSS3DRenderer.js";
 import {CSS3DRenderer} from "https://cdn.jsdelivr.net/npm/three@latest/examples/jsm/renderers/CSS3DRenderer.js";
+
 // import Vue from 'vue';
 // const Vue=require('vue');
 // import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
-let scene,mixer,thirdCamera,camera,selected,CssScene,css_render;
+// import * as CANNON from 'cannon';
+let scene,mixer,thirdCamera,camera,selected,CssScene,css_render,debugRender,time_step,world,cube1_body,cube1,GLTF_geometry;
 Vue.createApp({
     data(){
 return{
@@ -23,8 +25,8 @@ return{
     controls:null,
     clock:new THREE.Clock(),
     x:0,
-    y:2,
-    z:-4,
+    y:4,
+    z:-30,
     _keys:{
         forward:false,
         backward:false,
@@ -33,7 +35,8 @@ return{
         space:false,
         shift:false,
         r:false,
-        f:false
+        f:false,
+        v:false,
     },
     current:null,
     idle:null,
@@ -44,7 +47,7 @@ return{
     run:null,
     jump:null,
     selected:null,
-
+    disableKey:false,
 }
     },
     watch:{
@@ -124,8 +127,14 @@ return{
                 this._keys.f=value;
             }
         },
-
-
+        _v:{
+          get(){
+          return this._keys.v;
+          },
+            set(value){
+              this._keys.v=value;
+            }
+        },
     },
     methods:{
         move(time){
@@ -198,10 +207,8 @@ return{
           R.multiply(Q);
       }
       if(this._space){
-          this._forward=false;
-          this._backward=false;
-          this._right=false;
-          this._left=false;
+          this.disableKey=true;
+         let me=this;
           jump.reset();
           jump.setLoop(THREE.LoopOnce,1);
           jump.clampWhenFinished=true;
@@ -211,9 +218,11 @@ return{
               idle.reset();
               idle.crossFadeFrom(jump,0.3,true);
               idle.play();
+              me.disableKey=false;
           })
       }
             if(this._r){
+                this.disableKey=true;
                 let current_action=mixer.clipAction(this.current);
                 current_action.stop();
                 velocity.z=0;
@@ -238,22 +247,37 @@ return{
                         idle.play();
                         me.current=me.idle;
                     }
+                    me.disableKey=false;
                     })
             }
             if(this._f){
-                this._forward=false;
-                this._backward=false;
-                this._right=false;
-                this._left=false;
+                this.disableKey=true;
                 kick.reset();
                 kick.setLoop(THREE.LoopOnce,1);
                 kick.clampWhenFinished=true;
                 kick.crossFadeFrom(mixer.clipAction(this.current),0.2,true);
                 kick.play();
+                let me = this;
                 kick.getMixer().addEventListener('finished',function(){
                     idle.reset();
                     idle.crossFadeFrom(kick,0.3,true);
                     idle.play();
+                    me.disableKey=false;
+                })
+            }
+            if(this._v){
+                this.disableKey=true;
+                dance.reset();
+                dance.setLoop(THREE.LoopOnce,1);
+                dance.clampWhenFinished=true;
+                dance.crossFadeFrom(mixer.clipAction(this.current),time*2,true);
+                dance.play();
+                let me=this;
+                dance.getMixer().addEventListener('finished',function(){
+                    idle.reset();
+                    idle.crossFadeFrom(dance,0.3,true);
+                    idle.play();
+                    me.disableKey=false;
                 })
             }
 
@@ -288,10 +312,13 @@ return{
             css_render.render(CssScene,camera);
             // this.controls.update();
 
+            world.step(time_step);
+            debugRender.update();
+            if(cube1!==undefined){cube1.position.copy(cube1_body.position);cube1.quaternion.copy(cube1_body.quaternion)}
             let dt=this.clock.getDelta();
             if(this.character!==null){ this.move(dt)}
             if(mixer!==undefined){mixer.update(dt)}
-            // if(thirdCamera!==undefined){thirdCamera.Update(dt)}
+            if(thirdCamera!==undefined){thirdCamera.Update(dt)}
             // if(selected!==undefined){selected.rotation.x+=0.05; console.log(selected)}
             },
         ReSize(){
@@ -303,19 +330,42 @@ return{
             camera.updateProjectionMatrix();
         },
         KeyDown(input,parent){
-            switch (input.key){
-                case 'w':parent._forward=true;break;
-                case 's':parent._backward=true;break;
-                case 'a':parent._left=true;break;
-                case 'd':parent._right=true;break;
-                case ' ':parent._space=true;break;
-                case 'Shift':parent._shift=true;break;
-                case 'r':parent._r=true;break;
-                case 'f':parent._f=true;break;
+
+            if(!parent.disableKey) {
+                switch (input.key) {
+                    case 'w':
+                        parent._forward = true;
+                        break;
+                    case 's':
+                        parent._backward = true;
+                        break;
+                    case 'a':
+                        parent._left = true;
+                        break;
+                    case 'd':
+                        parent._right = true;
+                        break;
+                    case ' ':
+                        parent._space = true;
+                        break;
+                    case 'Shift':
+                        parent._shift = true;
+                        break;
+                    case 'r':
+                        parent._r = true;
+                        break;
+                    case 'f':
+                        parent._f = true;
+                        break;
+                    case 'v':
+                        parent._v = true;
+                        break;
+                }
             }
 
         },
         KeyUp(input,parent){
+
             switch (input.key){
                 case 'w':parent._forward=false;break;
                 case 's':parent._backward=false;break;
@@ -325,6 +375,7 @@ return{
                 case 'Shift':parent._shift=false;break;
                 case 'r':parent._r=false;break;
                 case 'f':parent._f=false;break;
+                case 'v':parent._v=false;break;
             }
 
         },
@@ -337,9 +388,11 @@ return{
         webgl_container.classList.add('h-full');
         webgl_container.classList.add('top-0');
         webgl_container.classList.add('left-0');
-        webgl_container.classList.add('z-20');
+        webgl_container.classList.add('bg-transparent');
+
         this.container.appendChild(webgl_container);
         console.log('mounted');
+
         /*THREE js : 1st Step: createScene */
         scene=new THREE.Scene();
 
@@ -363,16 +416,17 @@ return{
         plane.castShadow = false;
         plane.receiveShadow = true;
         plane.rotation.x = -Math.PI / 2;
-        // scene.add(plane);
+        scene.add(plane);
         const geometry = new THREE.BoxGeometry(5,5);
         const material = new THREE.MeshBasicMaterial( { color: 0xffffff } );
         const cube = new THREE.Mesh( geometry, material );
         cube.position.set(10,0,20)
         scene.add( cube );
-        const geometry1 = new THREE.BoxGeometry(8,8);
+        const geometry1 = new THREE.BoxGeometry(5,5);
         const material1 = new THREE.MeshBasicMaterial( { color: 0xffffff } );
-        const cube1 = new THREE.Mesh( geometry1, material1 );
-        cube1.position.set(20,0,-10)
+        cube1 = new THREE.Mesh( geometry1, material1 );
+        // cube1.position.set(20,0,-10)
+
         scene.add( cube1 );
         const geometry2 = new THREE.BoxGeometry(10,10);
         const material2 = new THREE.MeshBasicMaterial( { color: 0xffffff } );
@@ -390,17 +444,13 @@ return{
 
         //4thStep:createLight;
         const ambient_light=new THREE.AmbientLight(0x404040);
-        scene.add(ambient_light);
-        const light2 = new THREE.HemisphereLight( 0xffffbb, 0x080820, 1 );
 
+        const light2 = new THREE.HemisphereLight( 0xffffbb, 0x080820, 1 );
+        scene.add(ambient_light);
         scene.add( light2 );
         //5thStep:Finally Animate the renderer;
 
-        this.controls = new OrbitControls( camera, this.renderer.domElement );
-        // this.controls.enableRotate = false;
-        // this.controls.enableZoom = false;
-        // this.controls.enablePan = false;
-        this.controls.update();
+
         const loader= new GLTFLoader();
         let vm=this;
         loader.load('./public/models/mix1.glb',function( gltf ){
@@ -408,7 +458,31 @@ return{
             obj.traverse((c)=>{
                 c.castShadow=true;
                 c.receiveShadow=true;
+               GLTF_geometry=c.geometry;
             })
+          //   let g=new THREE.Geometry().fromBufferGeometry(GLTF_geometry);
+          //   let scale=obj.scale;
+          //   let vertices=[],faces=[];
+          //   for(let i =0 ; i<g.vertices.length;i++){
+          //       let x= scale.x*g.vertices[i].x;
+          //       let y= scale.y*g.vertices[i].y;
+          //       let z= scale.z*g.vertices[i].z;
+          //       vertices.push(new CANNON.Vec3(x,y,z))
+          //   }
+          //   for(let i=0;i<g.faces.length;i++){
+          //       let a=g.faces[i].a;
+          //       let b=g.faces[i].b;
+          //       let c=g.faces[i].c;
+          //       faces.push([a,b,c]);
+          //   }
+          //   console.log(vertices,faces);
+          // let shape=new CANNON.ConvexPolyhedron(vertices,faces);
+          // let rigidBody=new CANNON.Body({
+          //     mass:0,
+          //     shape:shape,
+          // });
+          // rigidBody.position.copy(obj.position);
+          // world.addBody(rigidBody);
             vm.character=obj;
             obj.position.y=0
             vm.animations=gltf.animations;
@@ -434,6 +508,7 @@ return{
             console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
 
         },)
+
        let cssContainer=document.createElement('div');
         cssContainer.classList.add('absolute')
         cssContainer.classList.add('w-full');
@@ -441,24 +516,47 @@ return{
         cssContainer.classList.add('top-0');
         cssContainer.classList.add('left-0');
         cssContainer.classList.add('bg-transparent');
-        cssContainer.classList.add('z-10')
+        cssContainer.classList.add('z-10');
         this.container.appendChild(cssContainer);
         CssScene=new THREE.Scene();
         css_render=new CSS3DRenderer();
         css_render.setSize(cssContainer.getBoundingClientRect().width,cssContainer.getBoundingClientRect().height)
         cssContainer.appendChild(css_render.domElement)
         let css3d=document.createElement('div');
-        css3d.classList.add('bg-white');
-        css3d.classList.add('w-64');
-        css3d.classList.add('h-64');
-        css3d.innerHTML="<h1>HEllO sdfsdfsdfsdf ;lkjlkjxkcvjiurwoer</h1>";
+        // css3d.innerHTML="<input class='p-2 focus:outline-none' type='text' placeholder='Type Here'></input>";
         let css_obj=new CSS3DObject(css3d);
         css_obj.castShadow=true;
         css_obj.receiveShadow=true;
-        css_obj.position.set(0,0,0);
-        css_obj.scale.setScalar(100)
+        css_obj.position.set(10,0,-30);
+        css_obj.scale.setScalar(0.06);
 
         CssScene.add(css_obj)
+        // CssScene.add(ambient_light);
+        // CssScene.add( light2 );
+        this.controls = new OrbitControls( camera, css_render.domElement );
+        this.controls.enableRotate = false;
+        this.controls.enableZoom = false;
+        this.controls.enablePan = false;
+        this.controls.update();
+
+        /* Cannon */
+        time_step=1.0/60.0;
+        world=new CANNON.World();
+        world.gravity.set(0,-10,0);
+        world.broadphase=new CANNON.NaiveBroadphase();
+        let plane1=new CANNON.Plane();
+        let plane_body=new CANNON.Body({shape:plane1,mass:0});
+        plane_body.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0),-Math.PI/2);
+        world.addBody(plane_body);
+
+        let box=new CANNON.Box(new CANNON.Vec3(0.5,0.5,0.5));
+        let boxBody=new CANNON.Body({shape:box,mass:4})
+        boxBody.position.set(0,20,0);
+        world.addBody(boxBody)
+        cube1_body=new CANNON.Body({shape:box,mass:5});
+        cube1_body.position.set(0,0,0);
+        world.addBody(cube1_body)
+        debugRender= new THREE.CannonDebugRenderer(scene,world);
         console.log(CssScene.children)
         console.log('created')
     },
@@ -466,20 +564,20 @@ return{
         let me= this;
         let ray = new THREE.Raycaster();
         let mouse={};
-         this.container.addEventListener('click',function(e){
-             mouse.x=(e.clientX/me.container.getBoundingClientRect().width)*2-1;
-             mouse.y=(e.clientY/me.container.getBoundingClientRect().height)*-2+1;
-             ray.setFromCamera(mouse,camera);
-             let items=ray.intersectObjects(scene.children);
-             items.forEach((i)=>{
-                 selected=selected===i.object?undefined:i.object;
-                 console.log(mouse)
-                 console.log(i.object)
-             })
-             // if(me.character!==null){console.log(me.character)}
-         })
-         document.addEventListener('keydown',function (e){me.KeyDown(e,me)})
-         document.addEventListener('keyup',function (e){me.KeyUp(e,me)})
+         // this.container.addEventListener('click',function(e){
+         //     mouse.x=(e.clientX/me.container.getBoundingClientRect().width)*2-1;
+         //     mouse.y=(e.clientY/me.container.getBoundingClientRect().height)*-2+1;
+         //     ray.setFromCamera(mouse,camera);
+         //     let items=ray.intersectObjects(scene.children);
+         //     items.forEach((i)=>{
+         //         selected=selected===i.object?undefined:i.object;
+         //         console.log(mouse)
+         //         console.log(i.object)
+         //     })
+         //     // if(me.character!==null){console.log(me.character)}
+         // })
+         document.addEventListener('keydown',function (e){{me.KeyDown(e,me)}})
+         document.addEventListener('keyup',function (e){{me.KeyUp(e,me)}})
 
         this.animate();
 

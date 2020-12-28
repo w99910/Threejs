@@ -5,6 +5,8 @@
     <title>Title</title>
     <link rel="stylesheet" href="public/index.css">
     <script src="https://unpkg.com/vue@3"></script>
+
+
 </head>
 <style>
     h1{
@@ -24,15 +26,27 @@
         position:absolute;
         top:0;
         left:0;
+        z-index:0;
     }
 </style>
 <body class="h-screen m-0 w-full p-4">
 <div class="h-full w-full relative m-0 p-0" id="app">
-<!--    <div id="css"></div>-->
-<!--    <div id="webgl"></div>-->
+    <p>{{hey}}</p>
+    <p class="box"><span>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic</span></p>
+          <div id="editorjs"></div>
+        <button class="focus:outline-none font-bold p-3 bg-green-300 m-1" @click="bold">Bold</button>
+<button class="focus:outline-none font-bold p-3 bg-green-300 m-1" @click="uppercase">UpperCase</button>
+    <!--    <div id="webgl"></div>-->
 </div>
-<!--<script src="dist/main.js"></script>-->
 <!--<script type="module" src="index.js"></script>-->
-<script type="module" src="main.js"></script>
+<!--<script src="node_modules/three/build/three.min.js"></script>-->
+<!--<script src="node_modules/three/build/three.module.js"></script>-->
+<!--<script src="node_modules/cannon/build/cannon.js"></script>-->
+<!--<script src="node_modules/cannon/tools/threejs/CannonDebugRenderer.js"></script>-->
+<!--<script src="node_modules/three-to-cannon/dist/three-to-cannon.module.js" type="module"></script>-->
+<!--<script src="https://cdn.jsdelivr.net/npm/@editorjs/editorjs@latest"></script>-->
+<!--<script type="module" src="test.js"></script>-->
+<script src="dist/main.js"></script>
+
 </body>
 </html>

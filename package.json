@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "watch": {
-    "test": "index.js"
+    "test": "test.js"
   },
   "scripts": {
     "test": "npm run start-webpack",
@@ -16,11 +16,21 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@editorjs/editorjs": "^2.19.1",
+    "@editorjs/embed": "^2.4.0",
+    "@editorjs/header": "^2.6.1",
+    "@editorjs/list": "^1.6.1",
+    "@editorjs/quote": "^2.4.0",
+    "@editorjs/raw": "^2.3.0",
     "autoprefixer": "^10.0.4",
+    "cannon": "^0.6.2",
+    "cannon-es": "^0.15.1",
+    "cannon-es-debugger": "0.0.4",
     "npm-watch": "^0.7.0",
     "postcss": "^8.1.14",
     "tailwindcss": "^2.0.1",
     "three": "^0.123.0",
+    "three-to-cannon": "^3.0.2",
     "vue": "^3.0.4",
     "webpack": "^5.9.0"
   },
